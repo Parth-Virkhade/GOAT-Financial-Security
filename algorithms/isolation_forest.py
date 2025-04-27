@@ -4,6 +4,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, precision_score
 
+
 def detect_fraud(df):
     # Check if 'amount', 'location', and 'time' columns exist
     required_columns = ['amount', 'location', 'time']
@@ -30,6 +31,7 @@ def detect_fraud(df):
     df['Fraud'] = np.where(preds == -1, 'Fraud', 'Non-Fraud')
 
     # Prepare labels for metrics
+    
     y_true = np.where(df['Fraud'] == 'Fraud', 1, 0)
     y_pred = np.where(preds == -1, 1, 0)
 

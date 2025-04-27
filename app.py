@@ -4,6 +4,8 @@ import pandas as pd
 import time
 from datetime import datetime
 import numpy as np
+import smtplib
+from email.message import EmailMessage
 # from utils.helper import generate_pdf  # Uncomment later when email/pdf is implemented
 
 app = Flask(__name__)
@@ -196,6 +198,51 @@ def download():
 @app.route('/contact')
 def contact():
     return "<h2 style='text-align:center;margin-top:2rem;'>Contact us at goat@security.ai</h2>"
+
+#email sending route
+
+import smtplib
+from email.message import EmailMessage
+
+@app.route('/send_email', methods=['POST'])
+def send_email():
+    name = request.form.get('name')
+    email = request.form.get('email')
+
+    if not name or not email:
+        return "Name and email required!", 400
+
+    msg = EmailMessage()
+    msg['Subject'] = "Your Fraud Detection Report"
+    msg['From'] = 'goatreportdev@gmail.com'  # You can change sender name if you want
+    msg['To'] = email
+
+    message_body = f"""
+    Greetings {name},
+
+    Your fraud detection report is ready!
+
+    Thank you for using GOAT Fraud Detection Service.
+
+    (Note: PDF report feature is coming soon!)
+
+    Best Regards,
+    GOAT Team 🐐
+    """
+
+    msg.set_content(message_body)
+
+    try:
+        server = smtplib.SMTP('smtp-relay.brevo.com', 587)
+        server.starttls()
+        server.login('8b8abb001@smtp-brevo.com', '1EN9m06WsGqL8Rht')  # your brevo smtp login and password
+        server.send_message(msg)
+        server.quit()
+        return "<h3>Email sent successfully! 📩</h3><a href='/'>Go Home</a>"
+    except Exception as e:
+        return f"Failed to send email: {str(e)}"
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
