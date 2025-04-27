@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-content">
+        <h1>Welcome to <span class="highlight">GOAT</span></h1>
+        <p>Your Smart Partner for Anomaly-Based Financial Fraud Detection</p>
+        <a href="{{ url_for('login') }}" class="btn-primary">Get Started</a>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Why Choose GOAT?</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>🧠 Intelligent Detection</h3>
+            <p>Uses advanced ML algorithms to detect suspicious transactions in your dataset.</p>
+        </div>
+        <div class="feature-card">
+            <h3>📊 Visual Insights</h3>
+            <p>Understand your data with interactive graphs, dashboards, and anomaly reports.</p>
+        </div>
+        <div class="feature-card">
+            <h3>🛡️ Fraud Awareness</h3>
+            <p>Learn how to avoid fraud through quizzes, story modes, and animated education.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

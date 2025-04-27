@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="algo-container">
+    <h2>Select an Algorithm to View Detailed Results</h2>
+    <div class="algo-grid">
+
+        {% for algo, data in summaries.items() %}
+        <div class="algo-card" onclick="chooseAlgo('{{ algo }}')">
+            <h3>{{ algo.replace('_', ' ').title() }}</h3>
+            {% if algo == 'rule_based' %}
+                <p>Define your own fraud detection rules (like amount or time).</p>
+                <p><strong>Requires user input</strong></p>
+            {% else %}
+                <p><strong>Anomalies:</strong> {{ data.anomalies }}%</p>
+                <p><strong>Accuracy:</strong> {{ data.accuracy }}%</p>
+                <p><strong>Precision:</strong> {{ data.precision }}%</p>
+                <p><strong>Time Taken:</strong> {{ data.time }}s</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+    </div>
+</section>
+
+<script>
+    function chooseAlgo(algoName) {
+        if (algoName === 'rule_based') {
+            window.location.href = "/rule_define";
+        } else {
+            window.location.href = "/loading/" + algoName;
+        }
+    }
+</script>
+{% endblock %}

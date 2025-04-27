@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="loading-section">
+    <h2>Applying Algorithms to Dataset...</h2>
+    <p>Please wait while we scan for anomalies and detect frauds!</p>
+
+    <div class="loader"></div>
+</section>
+
+<script>
+    setTimeout(function() {
+        window.location.href = "/algorithm";
+    }, 5000);  // Redirect after 5 seconds (adjust if needed)
+</script>
+{% endblock %}

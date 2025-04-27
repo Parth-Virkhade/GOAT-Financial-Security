@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Upload Transaction Data</h2>
+
+    {% if error %}
+        <p class="error-msg">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        <label for="file">Select a CSV file</label>
+        <input type="file" name="file" id="file" accept=".csv" required>
+
+        <button type="submit" class="btn-primary">Upload & Continue</button>
+    </form>
+</div>
+
+<div class="instructions">
+    <h3>📄 Instructions:</h3>
+    <ul>
+        <li>Upload a <strong>.csv</strong> file containing transaction data.</li>
+        <li>File must have these columns: <code>amount</code>, <code>location</code>, <code>time</code>.</li>
+        <li>Make sure there are no missing headers or empty rows.</li>
+        <li>You’ll choose a fraud detection algorithm in the next step.</li>
+    </ul>
+</div>
+{% endblock %}

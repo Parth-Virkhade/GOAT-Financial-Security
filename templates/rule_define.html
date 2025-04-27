@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Define Custom Rules</h2>
+    <p>Add one or more rules. Rules will be applied using AND logic.</p>
+
+    <form method="POST">
+        <div id="rules-area">
+            <div class="rule-row">
+                <select name="field">
+                    <option value="amount">Amount</option>
+                    <option value="location">Location</option>
+                    <option value="time">Time</option>
+                </select>
+
+                <select name="operator">
+                    <option value=">">Greater than</option>
+                    <option value="<">Less than</option>
+                    <option value="==">Equals</option>
+                    <option value="!=">Not equals</option>
+                </select>
+
+                <input type="text" name="value" placeholder="Enter value">
+            </div>
+        </div>
+
+        <button type="button" onclick="addRule()" class="btn-secondary">+ Add Another Rule</button>
+        <br><br>
+        <button type="submit" class="btn-primary">Apply Rule-Based Detection</button>
+    </form>
+</div>
+
+<script>
+    function addRule() {
+        const area = document.getElementById("rules-area");
+        const newRow = document.createElement("div");
+        newRow.className = "rule-row";
+        newRow.innerHTML = `
+            <select name="field">
+                <option value="amount">Amount</option>
+                <option value="location">Location</option>
+                <option value="time">Time</option>
+            </select>
+
+            <select name="operator">
+                <option value=">">Greater than</option>
+                <option value="<">Less than</option>
+                <option value="==">Equals</option>
+                <option value="!=">Not equals</option>
+            </select>
+
+            <input type="text" name="value" placeholder="Enter value">
+        `;
+        area.appendChild(newRow);
+    }
+</script>
+{% endblock %}

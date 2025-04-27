@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="loading-screen">
+    <div class="spinner"></div>
+    <h2 id="loading-text">Implementing algorithm...</h2>
+</div>
+
+<script>
+    const messages = [
+        "Implementing algorithm...",
+        "Scanning for anomalies...",
+        "Detecting fraud..."
+    ];
+    let index = 0;
+
+    setInterval(() => {
+        index = (index + 1) % messages.length;
+        document.getElementById('loading-text').innerText = messages[index];
+    }, 1500);
+
+    // Redirect to results page after 4.5 seconds
+    setTimeout(() => {
+        window.location.href = "/results/{{ algo }}";
+    }, 4500);
+</script>
+{% endblock %}
