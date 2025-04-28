@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-content">
+        <h1>Stay Smart, Stay Safe 🛡️</h1>
+        <p>Learn about financial frauds and how to protect yourself.</p>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Common Types of Frauds</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>Phishing</h3>
+            <p>Fraudsters trick you into revealing sensitive info via fake emails or websites.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Card Skimming</h3>
+            <p>Hidden devices steal your card data at ATMs or gas stations.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Fake Investments</h3>
+            <p>Promises of "guaranteed returns" to scam you into investing your money.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Account Takeover</h3>
+            <p>Hackers steal login details to access and empty your accounts.</p>
+        </div>
+    </div>
+</section>
+<section class="story-section">
+    <h2>Real Fraud Case: The Story of Sarah Johnson</h2>
+    <div class="story-content">
+        <p>
+            In 2024, Sarah Johnson, a small business owner from New York, received an urgent email that appeared to be from her bank. 
+            The email warned her about "suspicious activities" on her account and urged her to verify her credentials immediately through a provided link.
+        </p>
+        <p>
+            Trusting the email, Sarah clicked the link and entered her bank details. Within minutes, unauthorized transactions began draining her account.
+            Fortunately, she noticed the alerts quickly and contacted her bank's fraud team, who froze the account just in time — saving her from losing thousands of dollars.
+        </p>
+        <p class="lesson">
+            <strong>Lesson:</strong> Always verify the source before clicking links. Banks never ask for sensitive information via email or SMS.
+        </p>
+    </div>
+</section>
+
+
+<script>
+    let score = 0;
+    let totalQuestions = 3;
+    let answeredQuestions = 0;
+
+    function answer(btn, correct) {
+        if (btn.disabled) return; // Prevent double clicking same button
+        btn.disabled = true;
+        btn.style.backgroundColor = correct ? "#b2fab4" : "#ffb2b2";
+
+        if (correct) {
+            score++;
+        }
+
+        answeredQuestions++;
+        if (answeredQuestions === totalQuestions) {
+            setTimeout(() => {
+                document.getElementById('quiz-result').innerHTML = `<h3>Your Score: ${score}/${totalQuestions}</h3>
+                <p>${score === 3 ? '🚀 Perfect! You are fraud-aware!' : '🔍 Good try! Review tips to stay safer.'}</p>`;
+            }, 300);
+        }
+    }
+</script>
+
+<section class="features" style="background-color: #f0f7ff;">
+    <h2>How to Stay Protected?</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>Strong Passwords 🔒</h3>
+            <p>Use complex passwords and change them regularly.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Verify Sources 🔍</h3>
+            <p>Always check links, emails, and caller identities carefully.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Secure Connections 🔗</h3>
+            <p>Always use secure Wi-Fi and check for HTTPS on websites.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Monitor Statements 📄</h3>
+            <p>Check your bank and credit card statements regularly for suspicious activity.</p>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <h2>Test Your Knowledge!</h2>
+    <p>Interactive Quizzes and Case Studies 🎯</p>
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ url_for('quiz') }}" class="btn-primary">🎯 Take the Quiz</a>
+    </div>
+    
+
+{% endblock %}

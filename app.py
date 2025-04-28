@@ -7,6 +7,22 @@ import numpy as np
 import smtplib
 from email.message import EmailMessage
 import requests
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle, SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.fonts import addMapping
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics
+
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -111,6 +127,12 @@ def upload():
             return render_template('upload.html', error='Please upload a valid CSV file.', user_info=user_info)
     return render_template('upload.html', user_info=user_info)
 
+@app.route('/quiz')
+def quiz():
+    user_info = get_user_info()
+    return render_template('quiz.html', user_info=user_info)
+
+
 @app.route('/processing')
 def processing():
     filepath = session.get('uploaded_file')
@@ -202,10 +224,68 @@ def awareness():
     user_info = get_user_info()
     return render_template('awareness.html', user_info=user_info)
 
+
+
 @app.route('/download')
 def download():
-    user_info = get_user_info()
-    return "<h4>PDF download coming soon!</h4>"
+    from fpdf import FPDF
+    import pandas as pd
+
+    table = session.get('labeled_data', [])
+    algo = session.get('current_algo', 'algorithm')
+
+    if not table:
+        return "<h4>No data to download!</h4>"
+
+    class PDF(FPDF):
+        def header(self):
+            # GOAT Logo
+            self.image('static/images/logo.png', 10, 8, 15)  # x, y, width
+            self.set_font('Times', 'B', 24)
+            self.set_text_color(43, 58, 103)
+            self.cell(0, 20, "GOAT - Fraud Detection Report", ln=True, align='C')
+            self.ln(10)
+
+    pdf = PDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+
+    pdf.set_font('Times', '', 12)
+    pdf.set_text_color(0, 0, 0)
+
+    # Table header
+    headers = list(table[0].keys())
+    col_widths = [pdf.get_string_width(header) + 10 for header in headers]
+
+    for idx, header in enumerate(headers):
+        if header.lower() == 'time':
+            col_widths[idx] = 45
+
+    pdf.set_fill_color(200, 220, 255)
+    for i, header in enumerate(headers):
+        pdf.cell(col_widths[i], 10, header, border=1, align='C', fill=True)
+    pdf.ln()
+
+    # Table rows
+    for row in table:
+        for i, (key, value) in enumerate(row.items()):
+            if key == 'Fraud':
+                if value == 'Fraud':
+                    pdf.set_fill_color(255, 200, 200)
+                else:
+                    pdf.set_fill_color(200, 255, 200)
+            else:
+                pdf.set_fill_color(255, 255, 255)
+
+            pdf.cell(col_widths[i], 10, str(value), border=1, align='C', fill=True)
+        pdf.ln()
+
+    filename = f"GOAT_Report_{algo}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    filepath = os.path.join('uploads', filename)
+    pdf.output(filepath)
+
+    return send_file(filepath, as_attachment=True)
+
 
 @app.route('/contact')
 def contact():

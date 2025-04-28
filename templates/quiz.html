@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="quiz-section">
+    <h2>🎯 Spot the Fraud Quiz</h2>
+
+    <div id="quiz-container">
+        <!-- Questions will be injected here by JS -->
+    </div>
+
+    <div id="quiz-result" style="margin-top: 2rem;"></div>
+</section>
+
+<script>
+const questions = [
+    {
+        q: "You receive an email saying you won a prize you didn't apply for. What do you do?",
+        options: ["Share bank details", "Ignore and Report"],
+        correct: 1
+    },
+    {
+        q: "A bank representative asks for your OTP on a call. Should you share?",
+        options: ["Yes", "No"],
+        correct: 1
+    },
+    {
+        q: "You get a call from 'Microsoft Support' asking for remote access. Safe?",
+        options: ["Yes, trust them", "No, it's a scam"],
+        correct: 1
+    },
+    {
+        q: "Online shopping site offers 90% off but only bank transfer payment. Should you proceed?",
+        options: ["Proceed", "Avoid"],
+        correct: 1
+    },
+    {
+        q: "You receive a link on SMS saying your bank account will be blocked unless you click. What to do?",
+        options: ["Click immediately", "Ignore and verify via bank"],
+        correct: 1
+    },
+    {
+        q: "You notice spelling mistakes and odd design on a 'bank login' page. What's happening?",
+        options: ["Real website", "Phishing attempt"],
+        correct: 1
+    },
+    {
+        q: "Seller insists on urgent payment via wire transfer without seeing the product. Trusted?",
+        options: ["Yes", "No"],
+        correct: 1
+    },
+    {
+        q: "You are promised quick loan approval but they ask for upfront payment. Red flag?",
+        options: ["Yes", "No"],
+        correct: 0
+    },
+    {
+        q: "Random WhatsApp message offers you a high-paying work-from-home job instantly. Real or fake?",
+        options: ["Real", "Fake"],
+        correct: 1
+    },
+    {
+        q: "A QR code sent by a stranger asks you to scan it to receive money. Should you scan?",
+        options: ["Yes", "No"],
+        correct: 1
+    }
+];
+
+let score = 0;
+let current = 0;
+
+function loadQuestion() {
+    const container = document.getElementById('quiz-container');
+    if (current >= questions.length) {
+        showCertificate();
+        return;
+    }
+
+    const q = questions[current];
+    container.innerHTML = `
+        <div class="quiz-question">
+            <p><strong>Question ${current + 1}:</strong> ${q.q}</p>
+            <button onclick="answer(0)">${q.options[0]}</button>
+            <button onclick="answer(1)">${q.options[1]}</button>
+        </div>
+    `;
+}
+
+function answer(selected) {
+    if (selected === questions[current].correct) {
+        score++;
+    }
+    current++;
+    loadQuestion();
+}
+
+function showCertificate() {
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = `
+        <div class="certificate">
+            🎉 Congratulations! <br><br> 
+            You scored <strong>${score}/${questions.length}</strong>!<br><br> 
+            You are now officially <span class="certified">GOAT Certified Fraud Aware 🐐🎖️</span>!
+        </div>
+    `;
+}
+
+window.onload = loadQuestion;
+</script>
+
+{% endblock %}
