@@ -19,6 +19,12 @@
     </nav>
 
     <main class="content">
+        {% if user_info %}
+        <div class="user-info-overlay">
+            {{ user_info.username }} | {{ user_info.ip }} | {{ user_info.location }}
+        </div>
+        {% endif %}
+        
         {% block content %}
         {% endblock %}
     </main>

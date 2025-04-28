@@ -6,7 +6,7 @@ from datetime import datetime
 import numpy as np
 import smtplib
 from email.message import EmailMessage
-# from utils.helper import generate_pdf  # Uncomment later when email/pdf is implemented
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
@@ -17,19 +17,10 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-ALGORITHMS = [
-    'z_score',
-    'isolation_forest',
-    'lof',
-    'autoencoder',
-    'kmeans'
-]
-
-# 🔥 Global dictionary to store outputs (not session)
+ALGORITHMS = ['z_score', 'isolation_forest', 'lof', 'autoencoder', 'kmeans']
 outputs_store = {}
 
 def run_all_algorithms(filepath):
-    import pandas as pd
     df = pd.read_csv(filepath)
     algorithms = ['z_score', 'isolation_forest', 'lof', 'kmeans', 'autoencoder', 'rule_based']
     summaries = {}
@@ -65,17 +56,34 @@ def run_all_algorithms(filepath):
             'details': clean_details
         }
 
-        # 🔥 Save output in global variable
         outputs_store[algo] = result_df.to_dict(orient='records')
-
         print(f"{algo} completed successfully.")
 
-    session['summaries'] = summaries  # ✅ only small summaries in session
-    session['labeled_data'] = outputs_store.get('rule_based', [])  # Save something for analysis
+    session['summaries'] = summaries
+    session['labeled_data'] = outputs_store.get('rule_based', [])
+
+def get_user_info():
+    ip = request.remote_addr or 'Unknown IP'
+    username = session.get('username', 'Guest')
+
+    try:
+        res = requests.get(f"https://ipinfo.io/{ip}/json")
+        if res.status_code == 200:
+            data = res.json()
+            city = data.get('city', '')
+            country = data.get('country', '')
+            location = f"{city}, {country}" if city and country else "Unknown Location"
+        else:
+            location = "Unknown Location"
+    except Exception:
+        location = "Unknown Location"
+
+    return {'ip': ip, 'username': username, 'location': location}
 
 @app.route('/')
 def home():
-    return render_template('index.html', title="GOAT - Home")
+    user_info = get_user_info()
+    return render_template('index.html', title="GOAT - Home", user_info=user_info)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -83,6 +91,7 @@ def login():
         username = request.form['username']
         password = request.form['password']
         if username == 'admin' and password == 'admin':
+            session['username'] = username  # <-- 🔥 Save username in session
             return redirect(url_for('upload'))
         else:
             return render_template('login.html', error='Invalid credentials')
@@ -90,6 +99,7 @@ def login():
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
+    user_info = get_user_info()
     if request.method == 'POST':
         file = request.files['file']
         if file and file.filename.endswith('.csv'):
@@ -98,25 +108,26 @@ def upload():
             session['uploaded_file'] = filepath
             return redirect(url_for('processing'))
         else:
-            return render_template('upload.html', error='Please upload a valid CSV file.')
-    return render_template('upload.html')
+            return render_template('upload.html', error='Please upload a valid CSV file.', user_info=user_info)
+    return render_template('upload.html', user_info=user_info)
 
 @app.route('/processing')
 def processing():
     filepath = session.get('uploaded_file')
     if not filepath:
         return redirect(url_for('upload'))
-
     run_all_algorithms(filepath)
-    return redirect(url_for('algorithm'))  # ✅ After processing, go to algorithm placards
+    return redirect(url_for('algorithm'))
 
 @app.route('/algorithm')
 def algorithm():
+    user_info = get_user_info()
     summaries = session.get('summaries', {})
-    return render_template('algorithm.html', summaries=summaries)
+    return render_template('algorithm.html', summaries=summaries, user_info=user_info)
 
 @app.route('/rule_define', methods=['GET', 'POST'])
 def rule_define():
+    user_info = get_user_info()
     if request.method == 'POST':
         fields = request.form.getlist('field')
         operators = request.form.getlist('operator')
@@ -129,24 +140,24 @@ def rule_define():
         session['rule_conditions'] = rules
         return redirect(url_for('results', algo='rule_based'))
 
-    return render_template('rule_define.html')
+    return render_template('rule_define.html', user_info=user_info)
 
 @app.route('/loading/<algo>')
 def loading(algo):
-    return render_template('loading.html', algo=algo)
+    user_info = get_user_info()
+    return render_template('loading.html', algo=algo, user_info=user_info)
 
 @app.route('/results/<algo>')
 def results(algo):
+    user_info = get_user_info()
     table = outputs_store.get(algo, [])
     session['current_algo'] = algo
-
-    # 🔥 FIX: update labeled_data dynamically
     session['labeled_data'] = table
-
-    return render_template('results.html', table=table, algo=algo)
+    return render_template('results.html', table=table, algo=algo, user_info=user_info)
 
 @app.route('/analysis')
 def analysis():
+    user_info = get_user_info()
     import plotly.graph_objs as go
     from plotly.offline import plot
     import pandas as pd
@@ -158,7 +169,7 @@ def analysis():
     df = pd.DataFrame(data)
 
     if 'Fraud' not in df.columns:
-        df['Fraud'] = 'Non-Fraud'  # 🔥 Add dummy column if missing
+        df['Fraud'] = 'Non-Fraud'
 
     counts = df['Fraud'].value_counts()
 
@@ -184,25 +195,22 @@ def analysis():
     if session.get('summaries') and session.get('current_algo'):
         details = session['summaries'][session['current_algo']].get('details', None)
 
-    return render_template('analysis.html', plot_div=plot_div, details=details)
-
+    return render_template('analysis.html', plot_div=plot_div, details=details, user_info=user_info)
 
 @app.route('/awareness')
 def awareness():
-    return render_template('awareness.html')
+    user_info = get_user_info()
+    return render_template('awareness.html', user_info=user_info)
 
 @app.route('/download')
 def download():
+    user_info = get_user_info()
     return "<h4>PDF download coming soon!</h4>"
 
 @app.route('/contact')
 def contact():
+    user_info = get_user_info()
     return "<h2 style='text-align:center;margin-top:2rem;'>Contact us at goat@security.ai</h2>"
-
-#email sending route
-
-import smtplib
-from email.message import EmailMessage
 
 @app.route('/send_email', methods=['POST'])
 def send_email():
@@ -214,7 +222,7 @@ def send_email():
 
     msg = EmailMessage()
     msg['Subject'] = "Your Fraud Detection Report"
-    msg['From'] = 'goatreportdev@gmail.com'  # You can change sender name if you want
+    msg['From'] = 'goatreportdev@gmail.com'
     msg['To'] = email
 
     message_body = f"""
@@ -235,14 +243,12 @@ def send_email():
     try:
         server = smtplib.SMTP('smtp-relay.brevo.com', 587)
         server.starttls()
-        server.login('8b8abb001@smtp-brevo.com', '1EN9m06WsGqL8Rht')  # your brevo smtp login and password
+        server.login('8b8abb001@smtp-brevo.com', '1EN9m06WsGqL8Rht')
         server.send_message(msg)
         server.quit()
         return "<h3>Email sent successfully! 📩</h3><a href='/'>Go Home</a>"
     except Exception as e:
         return f"Failed to send email: {str(e)}"
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
