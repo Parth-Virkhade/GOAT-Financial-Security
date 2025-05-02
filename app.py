@@ -1,3 +1,8 @@
+import os
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # 👈 ALLOW HTTP FOR LOCAL TESTING
+
+
+
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 import os
 import pandas as pd
@@ -22,6 +27,16 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.fonts import addMapping
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
+from requests_oauthlib import OAuth2Session
+
+GOOGLE_CLIENT_ID = "42611484438-iv1d8lv8rhdt2pubbn398344jmjf98ln.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
+REDIRECT_URI = "http://localhost:5000/callback"
+
+AUTHORIZATION_BASE_URL = 'https://accounts.google.com/o/oauth2/auth'
+TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
+USER_INFO_URL = 'https://www.googleapis.com/oauth2/v1/userinfo'
+
 
 
 app = Flask(__name__)
@@ -103,15 +118,58 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    user_info = get_user_info()
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         if username == 'admin' and password == 'admin':
-            session['username'] = username  # <-- 🔥 Save username in session
+            session['username'] = username
             return redirect(url_for('upload'))
         else:
-            return render_template('login.html', error='Invalid credentials')
-    return render_template('login.html')
+            return render_template('login.html', error='Invalid credentials', user_info=user_info)
+    return render_template('login.html', user_info=user_info)
+
+@app.route('/google_login')
+def google_login():
+    google = OAuth2Session(GOOGLE_CLIENT_ID, redirect_uri=REDIRECT_URI, scope=SCOPE)
+    auth_url, state = google.authorization_url(AUTHORIZATION_BASE_URL)
+
+    # Save the correct state in session
+    session['oauth_state'] = state
+
+    return redirect(auth_url)
+
+
+@app.route('/callback')
+def callback():
+    from requests_oauthlib import OAuth2Session
+
+    if 'oauth_state' not in session:
+        return redirect(url_for('login'))
+
+    google = OAuth2Session(GOOGLE_CLIENT_ID, redirect_uri=REDIRECT_URI, state=session['oauth_state'])
+
+    try:
+        token = google.fetch_token(
+            TOKEN_URL,
+            client_secret=GOOGLE_CLIENT_SECRET,
+            authorization_response=request.url
+        )
+    except Exception as e:
+        return f"<h3>Failed to fetch token:</h3><p>{e}</p>"
+
+    try:
+        resp = google.get(USER_INFO)
+        user_info = resp.json()
+        # Save user info to session
+        session['username'] = user_info.get('name') or user_info.get('email') or 'Google User'
+    except Exception as e:
+        session['username'] = 'Google User'
+        print(f"Failed to fetch user info: {e}")
+
+    return redirect(url_for('upload'))
+
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
@@ -329,6 +387,87 @@ def send_email():
         return "<h3>Email sent successfully! 📩</h3><a href='/'>Go Home</a>"
     except Exception as e:
         return f"Failed to send email: {str(e)}"
+
+
+
+@app.route('/visuals')
+def visuals():
+    import plotly.graph_objs as go
+    from plotly.offline import plot
+    import pandas as pd
+
+    data = session.get('labeled_data', [])
+    if not data:
+        return redirect(url_for('upload'))
+
+    df = pd.DataFrame(data)
+    plot_divs = {}
+
+    # 1. Pie chart - Fraud vs Non-Fraud
+    pie_counts = df['Fraud'].value_counts()
+    pie_colors = ['#d60000' if label == 'Fraud' else '#007a3d' for label in pie_counts.index]
+    pie_trace = go.Pie(labels=pie_counts.index, values=pie_counts.values, hole=0.4, marker=dict(colors=pie_colors))
+    pie_fig = go.Figure(data=[pie_trace])
+    pie_fig.update_layout(title='Fraud vs Non-Fraud (Pie)')
+    plot_divs["Fraud vs Non-Fraud (Pie)"] = plot(pie_fig, output_type='div')
+
+    # 2. Bar chart - Count by Location with proper color coding
+    if 'location' in df.columns:
+        bar_data = df.groupby(['location', 'Fraud']).size().unstack(fill_value=0)
+        bar_colors = {'Fraud': '#d60000', 'Non-Fraud': '#007a3d'}
+        bar_trace = [
+            go.Bar(
+                name=label,
+                x=bar_data.index,
+                y=bar_data[label],
+                marker=dict(color=bar_colors.get(label, 'gray'))
+            ) for label in bar_data.columns
+        ]
+        bar_fig = go.Figure(data=bar_trace)
+        bar_fig.update_layout(
+            barmode='group',
+            title='Transaction Count by Location',
+            xaxis_title="Location",
+            yaxis_title="Count"
+        )
+        plot_divs["Transaction Count by Location"] = plot(bar_fig, output_type='div')
+
+    # 3. Line chart - Amount over Time
+    if 'time' in df.columns and 'amount' in df.columns:
+        try:
+            df['parsed_time'] = pd.to_datetime(df['time'], errors='coerce')
+            line_df = df.dropna(subset=['parsed_time'])
+            line_df = line_df.sort_values(by='parsed_time')
+            line_trace = go.Scatter(
+                x=line_df['parsed_time'],
+                y=line_df['amount'],
+                mode='lines',
+                line=dict(color='#2b3a67')
+            )
+            line_fig = go.Figure(data=[line_trace])
+            line_fig.update_layout(
+                title='Transaction Amount Over Time',
+                xaxis_title="Time",
+                yaxis_title="Transaction Amount"
+            )
+            plot_divs["Transaction Amount Over Time"] = plot(line_fig, output_type='div')
+        except Exception as e:
+            print(f"Line chart error: {e}")
+
+    # 4. Heatmap - Correlation Matrix
+    if df.select_dtypes(include='number').shape[1] > 1:
+        corr = df.select_dtypes(include='number').corr()
+        heatmap_trace = go.Heatmap(
+            z=corr.values,
+            x=corr.columns,
+            y=corr.columns,
+            colorscale='Viridis'
+        )
+        heatmap_fig = go.Figure(data=[heatmap_trace])
+        heatmap_fig.update_layout(title='Feature Correlation Heatmap')
+        plot_divs["Feature Correlation Heatmap"] = plot(heatmap_fig, output_type='div')
+
+    return render_template('visuals.html', plot_divs=plot_divs)
 
 if __name__ == '__main__':
     app.run(debug=True)

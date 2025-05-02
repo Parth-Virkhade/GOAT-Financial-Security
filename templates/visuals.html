@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="dashboard-container">
+    <h2>📊 Interactive Fraud Detection Dashboard</h2>
+
+    {% for title, div in plot_divs.items() %}
+    <div class="chart-section">
+        <h3>{{ title }}</h3>
+        {{ div | safe }}
+    </div>
+    {% endfor %}
+
+    <div class="button-row">
+        <a href="{{ url_for('results', algo=session['current_algo']) }}" class="btn-secondary">⬅ Back to Table</a>
+    </div>
+</section>
+{% endblock %}
