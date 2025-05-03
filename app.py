@@ -29,6 +29,17 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
 from requests_oauthlib import OAuth2Session
 
+#MongoDB Database connection
+from pymongo import MongoClient
+
+# Connect to local MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+
+# Access the database and collection
+db = client["FraudDB"]
+users_collection = db["users"]           # for login/signup
+transactions_collection = db["transactions"]  # for fraud data
+
 GOOGLE_CLIENT_ID = "42611484438-iv1d8lv8rhdt2pubbn398344jmjf98ln.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "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"
 REDIRECT_URI = "http://localhost:5000/callback"
@@ -37,6 +48,8 @@ AUTHORIZATION_BASE_URL = 'https://accounts.google.com/o/oauth2/auth'
 TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
 USER_INFO_URL = 'https://www.googleapis.com/oauth2/v1/userinfo'
 
+SCOPE = ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email']
+USER_INFO = USER_INFO_URL  # Fixing name mismatch
 
 
 app = Flask(__name__)
@@ -111,6 +124,20 @@ def get_user_info():
 
     return {'ip': ip, 'username': username, 'location': location}
 
+#signup page
+@app.route("/signup", methods=["POST"])
+def signup():
+    username = request.form["username"]
+    password = request.form["password"]
+
+    existing_user = users_collection.find_one({"username": username})
+    if existing_user:
+        return "User already exists. Please login."
+
+    users_collection.insert_one({"username": username, "password": password})
+    return redirect("/login")
+
+
 @app.route('/')
 def home():
     user_info = get_user_info()
@@ -131,13 +158,14 @@ def login():
 
 @app.route('/google_login')
 def google_login():
-    google = OAuth2Session(GOOGLE_CLIENT_ID, redirect_uri=REDIRECT_URI, scope=SCOPE)
-    auth_url, state = google.authorization_url(AUTHORIZATION_BASE_URL)
+    google = OAuth2Session(GOOGLE_CLIENT_ID, scope=SCOPE, redirect_uri=REDIRECT_URI)
+    authorization_url, state = google.authorization_url(
+        AUTHORIZATION_BASE_URL,
+        access_type="offline", prompt="select_account")
 
-    # Save the correct state in session
     session['oauth_state'] = state
+    return redirect(authorization_url)
 
-    return redirect(auth_url)
 
 
 @app.route('/callback')
@@ -159,7 +187,7 @@ def callback():
         return f"<h3>Failed to fetch token:</h3><p>{e}</p>"
 
     try:
-        resp = google.get(USER_INFO)
+        resp = google.get(USER_INFO_URL)
         user_info = resp.json()
         # Save user info to session
         session['username'] = user_info.get('name') or user_info.get('email') or 'Google User'
