@@ -1,6 +1,37 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+/* Tooltip styling */
+.algo-card {
+    position: relative;
+    cursor: pointer;
+}
+
+.tooltip-box {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #222;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    width: 240px;
+    z-index: 10;
+    text-align: left;
+    font-size: 0.9rem;
+    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    margin-top: 8px;
+    transition: opacity 0.3s ease;
+}
+
+.algo-card:hover .tooltip-box {
+    display: block;
+}
+</style>
+
 <section class="algo-container">
     <h2>Select an Algorithm to View Detailed Results</h2>
     <div class="algo-grid">
@@ -17,6 +48,25 @@
                 <p><strong>Precision:</strong> {{ data.precision }}%</p>
                 <p><strong>Time Taken:</strong> {{ data.time }}s</p>
             {% endif %}
+
+            <!-- Tooltip Description -->
+            <div class="tooltip-box">
+                {% if algo == 'rule_based' %}
+                    Uses user-defined rules like <em>amount &gt; 5000</em> or <em>time &lt; 6am</em> to flag suspicious activity. Best for clear, known patterns.
+                {% elif algo == 'z_score' %}
+                    Flags transactions that are several standard deviations away from the mean. Ideal for identifying extreme outliers in numerical data.
+                {% elif algo == 'isolation_forest' %}
+                    Randomly isolates transactions. Fraudulent ones get isolated faster. Works well even with high-dimensional data.
+                {% elif algo == 'lof' %}
+                    Calculates local density around a point and compares it to neighbors. Points with significantly lower density are flagged as anomalies.
+                {% elif algo == 'autoencoder' %}
+                    A neural network learns to recreate inputs. If reconstruction error is high, the transaction is considered unusual or fraudulent.
+                {% elif algo == 'kmeans' %}
+                    Groups data into clusters. Transactions far from any cluster center are flagged as anomalies — useful for pattern-based detection.
+                {% else %}
+                    Click to view results.
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
 

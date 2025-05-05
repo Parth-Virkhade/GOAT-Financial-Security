@@ -125,17 +125,37 @@ def get_user_info():
     return {'ip': ip, 'username': username, 'location': location}
 
 #signup page
-@app.route("/signup", methods=["POST"])
+from flask import request, redirect
+from pymongo import MongoClient
+import bcrypt
+
+client = MongoClient('mongodb://localhost:27017/')
+db = client['fraud_detection']
+users_collection = db['users']
+
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    username = request.form["username"]
-    password = request.form["password"]
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        username = request.form['username']
+        password = request.form['password']
 
-    existing_user = users_collection.find_one({"username": username})
-    if existing_user:
-        return "User already exists. Please login."
+        if users_collection.find_one({'username': username}):
+            return render_template('signup.html', message='Username already exists.')
 
-    users_collection.insert_one({"username": username, "password": password})
-    return redirect("/login")
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        users_collection.insert_one({
+            'name': name,
+            'email': email,
+            'username': username,
+            'password': hashed_pw
+        })
+        return render_template('signup.html', message='You have successfully registered!')
+
+    return render_template('signup.html')
+
 
 
 @app.route('/')
@@ -145,16 +165,22 @@ def home():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    user_info = get_user_info()
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if username == 'admin' and password == 'admin':
-            session['username'] = username
-            return redirect(url_for('upload'))
+
+        user = users_collection.find_one({'username': username})
+        if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
+            session['user'] = user['username']
+            return redirect('/upload')
         else:
-            return render_template('login.html', error='Invalid credentials', user_info=user_info)
-    return render_template('login.html', user_info=user_info)
+            return render_template('login.html', error='Invalid credentials.')
+
+    return render_template('login.html')
+
+
+
+
 
 @app.route('/google_login')
 def google_login():
@@ -517,6 +543,10 @@ def visuals():
         plot_divs["Feature Correlation Heatmap"] = plot(heatmap_fig, output_type='div')
 
     return render_template('visuals.html', plot_divs=plot_divs)
+
+
+
+
 
 
 

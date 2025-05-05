@@ -86,6 +86,14 @@ body {
     background-color: #005ecc;
 }
 
+.buttons {
+    margin-top: 20px;
+    display: flex;
+    gap: 15px; /* adds space between buttons */
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 /* Features Section */
 .features {
     padding: 3rem 2rem;
@@ -102,9 +110,12 @@ body {
 .feature-grid {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 2rem;
+    justify-content: center; /* center all items */
+    gap: 2rem;               /* consistent spacing between cards */
+    max-width: 1000px;       /* prevents cards from stretching too far */
+    margin: 0 auto;          /* centers the whole grid */
 }
+
 
 .feature-card {
     background-color: #f9fbff;

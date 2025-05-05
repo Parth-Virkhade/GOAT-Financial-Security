@@ -1,0 +1,93 @@
+<!-- templates/signup.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<style>
+    body {
+        font-family: 'Times New Roman', serif;
+        background-color: white;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    main {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 80px; /* height of navbar */
+        padding-bottom: 80px; /* height of footer */
+    }
+
+    .signup-box {
+        background-color: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        width: 350px;
+        text-align: center;
+        z-index: 2;
+    }
+
+    .signup-box h2 {
+        margin-bottom: 20px;
+    }
+
+    .signup-box input {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    }
+
+    .signup-box button {
+        margin-top: 15px;
+        width: 100%;
+        padding: 12px;
+        background-color: #4e54c8;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .signup-box button:hover {
+        background-color: #3b40a1;
+    }
+
+    .success-message {
+        color: green;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    .login-link {
+        margin-top: 10px;
+        display: block;
+    }
+</style>
+
+
+<div class="signup-box">
+    <h2>Create an Account</h2>
+    <form action="/signup" method="POST">
+        <input type="text" name="name" placeholder="Full Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Register</button>
+    </form>
+
+    {% if message %}
+        <p class="success-message">{{ message }}</p>
+        <a href="/login" class="login-link"><button>Login</button></a>
+    {% endif %}
+</div>
+{% endblock %}
