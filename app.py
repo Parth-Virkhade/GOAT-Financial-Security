@@ -198,7 +198,7 @@ def callback():
     return redirect(url_for('upload'))
 
 
-
+#upload route
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     user_info = get_user_info()
@@ -213,19 +213,39 @@ def upload():
             return render_template('upload.html', error='Please upload a valid CSV file.', user_info=user_info)
     return render_template('upload.html', user_info=user_info)
 
+
+
+
 @app.route('/quiz')
 def quiz():
     user_info = get_user_info()
     return render_template('quiz.html', user_info=user_info)
 
+@app.route('/loading')
+def loading():
+    return render_template('loading.html')
 
+#processing
 @app.route('/processing')
 def processing():
     filepath = session.get('uploaded_file')
     if not filepath:
         return redirect(url_for('upload'))
+
+    return render_template('processing.html')  # shows loading animation
+
+    # NOTE: JavaScript in processing.html will redirect to /run-algos
+
+    
+@app.route('/run-algos')
+def run_algos():
+    filepath = session.get('uploaded_file')
+    if not filepath:
+        return redirect(url_for('upload'))
+    
     run_all_algorithms(filepath)
-    return redirect(url_for('algorithm'))
+    return redirect(url_for('algorithm'))  # Redirect to placards
+
 
 @app.route('/algorithm')
 def algorithm():
@@ -251,9 +271,10 @@ def rule_define():
     return render_template('rule_define.html', user_info=user_info)
 
 @app.route('/loading/<algo>')
-def loading(algo):
+def loading_algorithm(algo):
     user_info = get_user_info()
     return render_template('loading.html', algo=algo, user_info=user_info)
+
 
 @app.route('/results/<algo>')
 def results(algo):
@@ -496,6 +517,8 @@ def visuals():
         plot_divs["Feature Correlation Heatmap"] = plot(heatmap_fig, output_type='div')
 
     return render_template('visuals.html', plot_divs=plot_divs)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
