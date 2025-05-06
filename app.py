@@ -75,8 +75,8 @@ def run_all_algorithms(filepath):
         module = __import__(f"algorithms.{algo}", fromlist=[None])
 
         if algo == 'rule_based':
-            amount_threshold = session.get('rule_amount', 0)
-            result_df, metrics = module.detect_fraud(df.copy(), amount_threshold)
+         rules = session.get('rules', [])
+         result_df, metrics = module.detect_fraud(df.copy(), rules)
         else:
             result_df, metrics = module.detect_fraud(df.copy())
 
@@ -105,7 +105,8 @@ def run_all_algorithms(filepath):
 
     session['summaries'] = summaries
     session['labeled_data'] = outputs_store.get('rule_based', [])
-
+    
+# changed location
 def get_user_info():
     ip = request.remote_addr or 'Unknown IP'
     username = session.get('username', 'Guest')
@@ -116,7 +117,7 @@ def get_user_info():
             data = res.json()
             city = data.get('city', '')
             country = data.get('country', '')
-            location = f"{city}, {country}" if city and country else "Unknown Location"
+            location = f"{city}, {country}" if city and country else "Dehradun"
         else:
             location = "Unknown Location"
     except Exception:
@@ -545,6 +546,33 @@ def visuals():
     return render_template('visuals.html', plot_divs=plot_divs)
 
 
+@app.route('/rule_based', methods=['GET', 'POST'])
+def rule_based():
+    if request.method == 'POST':
+        df = session.get('data_df')
+        if not df:
+            return redirect(url_for('upload'))
+
+        # Extract rules from form
+        fields = request.form.getlist('field')
+        operators = request.form.getlist('operator')
+        values = request.form.getlist('value')
+
+        rules = []
+        for f, o, v in zip(fields, operators, values):
+            rules.append({'field': f, 'operator': o, 'value': v})
+
+        df = pd.DataFrame(df)
+        from rule_based import detect_fraud
+        result_df, stats = detect_fraud(df.copy(), rules)
+
+        session['results_table'] = result_df.to_dict(orient='records')
+        session['summary'] = stats
+        session['algo'] = 'rule_based'
+
+        return redirect(url_for('results'))
+
+    return render_template('rule_define.html')
 
 
 
