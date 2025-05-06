@@ -420,11 +420,11 @@ def download():
 
     return send_file(filepath, as_attachment=True)
 
-
+#contact page route
 @app.route('/contact')
 def contact():
     user_info = get_user_info()
-    return "<h2 style='text-align:center;margin-top:2rem;'>Contact us at goat@security.ai</h2>"
+    return render_template('contactpage.html', user_info=user_info)
 
 from fpdf import FPDF
 import tempfile

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Us | GOAT Security</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+
+        header {
+            background-color: #112c36;
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        section {
+            max-width: 1000px;
+            margin: 2rem auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            color: #333;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .team-section {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .team-member {
+            flex: 1;
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .team-member img {
+            width: 100%;
+            max-width: 180px;
+            height: auto;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #222;
+            color: white;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Contact Us - GOAT Financial Security</h1>
+</header>
+
+<section>
+    <h2>Reach Out to Us At</h2>
+    <p>Email: <strong>goat@security.ai , goatreportdev@gmail.com</strong></p>
+    <p>Phone: +91 911911 911000</p>
+    <p>Address: 15th Cyber Tower, Fintech Valley, Dehradun, India - 248001</p>
+
+    <h3>About GOAT</h3>
+    <p>
+        GOAT Financial Security is a next-generation fraud detection firm powered by AI and user education. 
+        We specialize in providing intelligent fraud protection systems for modern digital transactions. 
+        Founded in 2024 by security enthusiasts and data scientists, we aim to make every transaction secure and trustworthy.
+    </p>
+    <p>
+        Our goal is to empower individuals and institutions with real-time alerts, educational tools, and fraud analytics dashboards.
+        We combine machine learning with human insight to detect and prevent financial fraud at scale.
+    </p>
+
+    <h2>Our Team</h2>
+    <div class="team-section">
+        <div class="team-member">
+            <img src="{{ url_for('static', filename='M1.png') }}" alt="Member 1">
+            <h4>Parth Virkhade</h4>
+            <p>Security Architect</p>
+            <p>parth@goatsecurity.ai</p>
+
+        </div>
+        <div class="team-member">
+            <img src="{{ url_for('static', filename='M2.png') }}" alt="Member 2">
+            <h4>Sahil Khan</h4>
+            <p>Security Analyst</p>
+            <p>sahil@goatsecurity.ai</p>
+
+        </div>
+        <div class="team-member">
+            <img src="{{ url_for('static', filename='M3.png') }}" alt="Member 3">
+            <h4>Aarushi Khokher</h4>
+            <p>Data Analyst</p>
+            <p>aarushi@goatsecurity.ai</p>
+
+        </div>
+        <div class="team-member">
+            <img src="{{ url_for('static', filename='M4.png') }}" alt="Member 4">
+            <h4>Manan Singh Khanni</h4>
+            <p>UIUX Designer</p>
+            <p>manan@goatsecurity.ai</p>
+        </div>
+    </div>
+</section>
+
+<footer>
+    &copy; 2025 GOAT Financial Security. All rights reserved.
+</footer>
+
+</body>
+</html>
