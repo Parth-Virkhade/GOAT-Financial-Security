@@ -426,6 +426,9 @@ def contact():
     user_info = get_user_info()
     return "<h2 style='text-align:center;margin-top:2rem;'>Contact us at goat@security.ai</h2>"
 
+from fpdf import FPDF
+import tempfile
+
 @app.route('/send_email', methods=['POST'])
 def send_email():
     name = request.form.get('name')
@@ -434,35 +437,64 @@ def send_email():
     if not name or not email:
         return "Name and email required!", 400
 
+    # Step 1: Generate PDF report
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"GOAT Fraud Detection Report", ln=True, align='C')
+    pdf.ln(10)
+    pdf.multi_cell(0, 10, f"Hello {name},\n\nBelow is a brief summary of your fraud detection results:\n\n")
+
+    # Load summary data from session
+    summaries = session.get('summaries', {})
+    for algo, details in summaries.items():
+        pdf.cell(0, 10, f"Algorithm: {algo}", ln=True)
+        pdf.cell(0, 10, f" - Anomaly %: {details.get('anomalies', 0)}%", ln=True)
+        pdf.cell(0, 10, f" - Accuracy: {details.get('accuracy', 0)}%", ln=True)
+        pdf.cell(0, 10, f" - Precision: {details.get('precision', 0)}%", ln=True)
+        pdf.cell(0, 10, f" - Time Taken: {details.get('time', 0)} sec", ln=True)
+        pdf.ln(5)
+
+    pdf.multi_cell(0, 10, "\nThank you for using GOAT Fraud Detection Service.\n Stay safe, stay smart!")
+
+    # Save to temp file
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+        pdf_path = tmp_file.name
+        pdf.output(pdf_path)
+
+    # Step 2: Compose Email
     msg = EmailMessage()
     msg['Subject'] = "Your Fraud Detection Report"
     msg['From'] = 'goatreportdev@gmail.com'
     msg['To'] = email
 
-    message_body = f"""
+    msg.set_content(f"""
     Greetings {name},
 
-    Your fraud detection report is ready!
+    Your fraud detection report is attached as a PDF.
 
     Thank you for using GOAT Fraud Detection Service.
 
-    (Note: PDF report feature is coming soon!)
-
     Best Regards,
-    GOAT Team 🐐
-    """
+    GOAT Team 
+    """)
 
-    msg.set_content(message_body)
+    # Attach the PDF file
+    with open(pdf_path, 'rb') as f:
+        pdf_data = f.read()
+        msg.add_attachment(pdf_data, maintype='application', subtype='pdf', filename='GOAT_Fraud_Report.pdf')
 
+    # Step 3: Send using Brevo SMTP
     try:
         server = smtplib.SMTP('smtp-relay.brevo.com', 587)
         server.starttls()
         server.login('8b8abb001@smtp-brevo.com', '1EN9m06WsGqL8Rht')
         server.send_message(msg)
         server.quit()
-        return "<h3>Email sent successfully! 📩</h3><a href='/'>Go Home</a>"
+        return "<h3>Email sent successfully with your PDF report! 📄📩</h3><a href='/'>Go Home</a>"
     except Exception as e:
         return f"Failed to send email: {str(e)}"
+
 
 
 
